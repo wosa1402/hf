@@ -1,0 +1,27 @@
+name: Trigger Multiple Hugging Face Spaces with Random Delay
+
+on:
+  schedule:
+    # 每隔16小时触发一次
+    - cron: '0 */16 * * *'
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get random delay
+        id: random_delay
+        run: echo "::set-output name=delay::$((RANDOM % 120))"
+      
+      - name: Delay execution
+        run: sleep ${{ steps.random_delay.outputs.delay }}m
+
+      - name: Wake up Hugging Face Spaces
+        run: |
+          for url in https://lang03383-uptime-kuma.hf.space https://tbo03-ql.hf.space; do
+            # 模拟浏览器访问
+            curl -X GET -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" "$url"
+            individual_delay=$((RANDOM % 60))  # 生成 0 到 59 秒的随机延迟
+            sleep "$individual_delay"s
+            sleep 5 
+          done
