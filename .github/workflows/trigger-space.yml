@@ -3,7 +3,7 @@ name: Trigger Multiple Hugging Face Spaces with Random Delay
 on:
   schedule:
     # 每隔16小时触发一次
-    - cron: '* * * * *'
+    - cron: '* */16 * * *'
 
 jobs:
   trigger:
