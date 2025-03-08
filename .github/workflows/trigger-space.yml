@@ -18,7 +18,7 @@ jobs:
 
       - name: Wake up Hugging Face Spaces
         run: |
-          for url in https://edep-ywcx.hf.space https://edep-zzz.hf.space https://lang03383-uptime-kuma2.hf.space https://tbo03-jiusl.hf.space https://tbo03-324sdre.hf.space https://vutacu-sajigu.hf.space https://vutacu-hfmanager.hf.space https://hxger-linkwarden.hf.space ; do
+          for url in https://edep-ywcx.hf.space https://edep-zzz.hf.space https://lang03383-uptime-kuma2.hf.space https://tbo03-jiusl.hf.space https://tbo03-324sdre.hf.space https://vutacu-sajigu.hf.space https://vutacu-hfmanager.hf.space https://hxger-linkwarden.hf.space https://hxger-cursor-to-openai.hf.space https://hxger-sjg.hf.space ; do
             # 模拟浏览器访问
             curl -X GET -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" "$url"
             individual_delay=$((RANDOM % 60))  # 生成 0 到 59 秒的随机延迟
