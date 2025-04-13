@@ -18,7 +18,7 @@ jobs:
 
       - name: Wake up Hugging Face Spaces
         run: |
-          for url in https://lang03383-uptime-kuma2.hf.space https://vutacu-sajigu.hf.space https://hxger-sjg.hf.space https://hxger-llkk.hf.space https://vutacu-qiuyelu.hf.space https://vutacu-dismiss.hf.space https://hxger-msb.hf.space ; do
+          for url in https://lang03383-uptime-kuma2.hf.space https://vutacu-sajigu.hf.space https://hxger-sjg.hf.space https://hxger-llkk.hf.space https://vutacu-qiuyelu.hf.space https://vutacu-dismiss.hf.space https://hxger-msb.hf.space https://keker23-wdtc.hf.space ; do
             # https://tbo03-jiusl.hf.space
             # 模拟浏览器访问
             curl -X GET -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" "$url"
