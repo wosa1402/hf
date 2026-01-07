@@ -1,4 +1,4 @@
-name: Trigger Multiple Hugging Face Spaces with Random Delay
+name: HuggingFace Keep Alive - Instant
 
 on:
   schedule:
@@ -14,19 +14,12 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Get random delay
-        id: random_delay
-        run: echo "delay=$((RANDOM % 30))" >> $GITHUB_OUTPUT
-      
-      - name: Delay execution
-        run: sleep ${{ steps.random_delay.outputs.delay }}m
-
       - name: Send start notification
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="HTML" \
-            -d text="🚀 <b>HuggingFace 保活任务开始</b>%0A%0A⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')%0A⏳ 初始延迟: ${{ steps.random_delay.outputs.delay }} 分钟"
+            -d text="🚀 <b>HuggingFace 保活任务开始</b>%0A%0A⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
 
       - name: Wake up Hugging Face Spaces
         id: wake_up
@@ -35,7 +28,6 @@ jobs:
             "https://qiyuelian2424-canary-1b-v2-dev.hf.space"
             "https://sibacohu-duorenyundong.hf.space"
             "https://anikaednerarter50-granite-docling-258m-demo.hf.space"
-            "https://sibacohu-wan2-2-fp8da-aoti-faster.hf.space"
           )
           
           success_count=0
@@ -73,7 +65,7 @@ jobs:
               -d parse_mode="HTML" \
               -d text="${emoji} <b>${space_name}</b>%0A状态码: ${http_code}%0A结果: ${status}"
             
-            # 随机延迟后进入下一个
+            # 随机延迟后进入下一个 (5-64秒)
             individual_delay=$((RANDOM % 60 + 5))
             sleep "${individual_delay}s"
           done
