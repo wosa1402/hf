@@ -2,9 +2,8 @@ name: HuggingFace Keep Alive - Instant
 
 on:
   schedule:
-    # 每隔6小时触发一次
     - cron: '0 */6 * * *'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 env:
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -23,18 +22,22 @@ jobs:
 
       - name: Wake up Hugging Face Spaces
         id: wake_up
+        shell: bash
         run: |
-          declare -a urls=(
-            "https://qiyuelian2424-canary-1b-v2-dev.hf.space"
-            "https://sibacohu-duorenyundong.hf.space"
-            "https://anikaednerarter50-granite-docling-258m-demo.hf.space"
-          )
+          urls="https://qiyuelian2424-canary-1b-v2-dev.hf.space
+          https://sibacohu-duorenyundong.hf.space
+          https://anikaednerarter50-granite-docling-258m-demo.hf.space"
           
           success_count=0
           fail_count=0
-          total=${#urls[@]}
+          total=0
           
-          for url in "${urls[@]}"; do
+          # 计算总数
+          for url in $urls; do
+            ((total++))
+          done
+          
+          for url in $urls; do
             space_name=$(echo "$url" | sed 's|https://||' | sed 's|.hf.space||')
             
             # 发送开始检测通知
@@ -65,12 +68,11 @@ jobs:
               -d parse_mode="HTML" \
               -d text="${emoji} <b>${space_name}</b>%0A状态码: ${http_code}%0A结果: ${status}"
             
-            # 随机延迟后进入下一个 (5-64秒)
+            # 随机延迟后进入下一个
             individual_delay=$((RANDOM % 60 + 5))
             sleep "${individual_delay}s"
           done
           
-          # 保存统计结果
           echo "success_count=${success_count}" >> $GITHUB_OUTPUT
           echo "fail_count=${fail_count}" >> $GITHUB_OUTPUT
           echo "total=${total}" >> $GITHUB_OUTPUT
@@ -78,11 +80,16 @@ jobs:
       - name: Send summary notification
         if: always()
         run: |
-          success=${{ steps.wake_up.outputs.success_count }}
-          fail=${{ steps.wake_up.outputs.fail_count }}
-          total=${{ steps.wake_up.outputs.total }}
+          success="${{ steps.wake_up.outputs.success_count }}"
+          fail="${{ steps.wake_up.outputs.fail_count }}"
+          total="${{ steps.wake_up.outputs.total }}"
           
-          if [ "$fail" -eq 0 ]; then
+          # 设置默认值防止空值
+          success=${success:-0}
+          fail=${fail:-0}
+          total=${total:-0}
+          
+          if [ "$fail" -eq 0 ] && [ "$total" -gt 0 ]; then
             summary_emoji="🎉"
             summary_status="全部成功"
           elif [ "$success" -eq 0 ]; then
