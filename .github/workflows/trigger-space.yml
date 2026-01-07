@@ -14,12 +14,12 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      # - name: Get random delay
-      #   id: random_delay
-      #   run: echo "delay=$((RANDOM % 30))" >> $GITHUB_OUTPUT
+      - name: Get random delay
+        id: random_delay
+        run: echo "delay=$((RANDOM % 1))" >> $GITHUB_OUTPUT
       
-      # - name: Delay execution
-      #   run: sleep ${{ steps.random_delay.outputs.delay }}m
+      - name: Delay execution
+        run: sleep ${{ steps.random_delay.outputs.delay }}m
 
       - name: Send start notification
         run: |
