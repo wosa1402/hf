@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Get random delay
         id: random_delay
-        run: echo "delay=$((RANDOM % 1))" >> $GITHUB_OUTPUT
+        run: echo "delay=$((RANDOM % 30))" >> $GITHUB_OUTPUT
       
       - name: Delay execution
         run: sleep ${{ steps.random_delay.outputs.delay }}m
