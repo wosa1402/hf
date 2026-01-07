@@ -14,12 +14,12 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Get random delay
-        id: random_delay
-        run: echo "delay=$((RANDOM % 120))" >> $GITHUB_OUTPUT
+      # - name: Get random delay
+      #   id: random_delay
+      #   run: echo "delay=$((RANDOM % 30))" >> $GITHUB_OUTPUT
       
-      - name: Delay execution
-        run: sleep ${{ steps.random_delay.outputs.delay }}m
+      # - name: Delay execution
+      #   run: sleep ${{ steps.random_delay.outputs.delay }}m
 
       - name: Send start notification
         run: |
@@ -35,6 +35,7 @@ jobs:
             "https://qiyuelian2424-canary-1b-v2-dev.hf.space"
             "https://sibacohu-duorenyundong.hf.space"
             "https://anikaednerarter50-granite-docling-258m-demo.hf.space"
+            "https://sibacohu-wan2-2-fp8da-aoti-faster.hf.space"
           )
           
           success_count=0
