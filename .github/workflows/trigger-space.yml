@@ -2,8 +2,13 @@ name: Trigger Multiple Hugging Face Spaces with Random Delay
 
 on:
   schedule:
-    # 每隔16小时触发一次
-    - cron: '* */16 * * *'
+    # 每隔6小时触发一次
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+env:
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
 jobs:
   trigger:
@@ -11,18 +16,91 @@ jobs:
     steps:
       - name: Get random delay
         id: random_delay
-        run: echo "::set-output name=delay::$((RANDOM % 120))"
+        run: echo "delay=$((RANDOM % 120))" >> $GITHUB_OUTPUT
       
       - name: Delay execution
         run: sleep ${{ steps.random_delay.outputs.delay }}m
 
-      - name: Wake up Hugging Face Spaces
+      - name: Send start notification
         run: |
-          for url in https://qiyuelian2424-canary-1b-v2-dev.hf.space https://sibacohu-duorenyundong.hf.space https://anikaednerarter50-granite-docling-258m-demo.hf.space; do
-            # https://tbo03-jiusl.hf.space
-            # 模拟浏览器访问
-            curl -X GET -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3" "$url"
-            individual_delay=$((RANDOM % 60))  # 生成 0 到 59 秒的随机延迟
-            sleep "$individual_delay"s
-            sleep 5 
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="HTML" \
+            -d text="🚀 <b>HuggingFace 保活任务开始</b>%0A%0A⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')%0A⏳ 初始延迟: ${{ steps.random_delay.outputs.delay }} 分钟"
+
+      - name: Wake up Hugging Face Spaces
+        id: wake_up
+        run: |
+          declare -a urls=(
+            "https://qiyuelian2424-canary-1b-v2-dev.hf.space"
+            "https://sibacohu-duorenyundong.hf.space"
+            "https://anikaednerarter50-granite-docling-258m-demo.hf.space"
+          )
+          
+          success_count=0
+          fail_count=0
+          total=${#urls[@]}
+          
+          for url in "${urls[@]}"; do
+            space_name=$(echo "$url" | sed 's|https://||' | sed 's|.hf.space||')
+            
+            # 发送开始检测通知
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d parse_mode="HTML" \
+              -d text="🔄 <b>正在唤醒:</b> ${space_name}"
+            
+            # 尝试访问并获取HTTP状态码
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" -X GET \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              --max-time 60 \
+              "$url")
+            
+            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 400 ]; then
+              status="✅ 成功"
+              emoji="✅"
+              ((success_count++))
+            else
+              status="❌ 失败"
+              emoji="❌"
+              ((fail_count++))
+            fi
+            
+            # 发送结果通知
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d parse_mode="HTML" \
+              -d text="${emoji} <b>${space_name}</b>%0A状态码: ${http_code}%0A结果: ${status}"
+            
+            # 随机延迟后进入下一个
+            individual_delay=$((RANDOM % 60 + 5))
+            sleep "${individual_delay}s"
           done
+          
+          # 保存统计结果
+          echo "success_count=${success_count}" >> $GITHUB_OUTPUT
+          echo "fail_count=${fail_count}" >> $GITHUB_OUTPUT
+          echo "total=${total}" >> $GITHUB_OUTPUT
+
+      - name: Send summary notification
+        if: always()
+        run: |
+          success=${{ steps.wake_up.outputs.success_count }}
+          fail=${{ steps.wake_up.outputs.fail_count }}
+          total=${{ steps.wake_up.outputs.total }}
+          
+          if [ "$fail" -eq 0 ]; then
+            summary_emoji="🎉"
+            summary_status="全部成功"
+          elif [ "$success" -eq 0 ]; then
+            summary_emoji="💥"
+            summary_status="全部失败"
+          else
+            summary_emoji="⚠️"
+            summary_status="部分成功"
+          fi
+          
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="HTML" \
+            -d text="${summary_emoji} <b>HuggingFace 保活任务完成</b>%0A%0A📊 统计结果:%0A✅ 成功: ${success}/${total}%0A❌ 失败: ${fail}/${total}%0A%0A🏷️ 状态: ${summary_status}%0A⏰ 完成时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
