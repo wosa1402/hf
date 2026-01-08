@@ -120,9 +120,9 @@ jobs:
           # 统计成功数量
           success=0
           total=3
-          [ "$r1" = "✅" ] && ((success++))
-          [ "$r2" = "✅" ] && ((success++))
-          [ "$r3" = "✅" ] && ((success++))
+          if [ "$r1" = "✅" ]; then success=$((success + 1)); fi
+          if [ "$r2" = "✅" ]; then success=$((success + 1)); fi
+          if [ "$r3" = "✅" ]; then success=$((success + 1)); fi
           
           if [ "$success" -eq "$total" ]; then
             summary="🎉 全部成功"
