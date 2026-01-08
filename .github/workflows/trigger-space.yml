@@ -13,6 +13,12 @@ jobs:
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     
     steps:
+      - name: Random delay before start
+        run: |
+          delay=$((RANDOM % 15 + 1))
+          echo "随机延迟 $delay 分钟后开始..."
+          sleep ${delay}m
+
       - name: Send start notification
         run: |
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
@@ -20,11 +26,14 @@ jobs:
             -d parse_mode="HTML" \
             -d text="🚀 <b>HuggingFace 保活任务开始</b>%0A⏰ 时间: $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
 
+      # ============ Space 1 ============
+      # 自定义名称: 在下面的 name= 后面修改显示名称
       - name: Wake up Space 1
         id: space1
         run: |
           url="https://qiyuelian2424-canary-1b-v2-dev.hf.space"
-          name="canary-1b-v2-dev"
+          name="Teldrive"  # ← 自定义名称
+          
           http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" \
             "$url")
@@ -35,19 +44,23 @@ jobs:
             echo "result=❌" >> $GITHUB_OUTPUT
           fi
           echo "code=$http_code" >> $GITHUB_OUTPUT
+          echo "name=$name" >> $GITHUB_OUTPUT
           
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d parse_mode="HTML" \
             -d text="🔄 <b>$name</b>%0A状态码: $http_code"
           
-          sleep 30
+          # 随机延迟 10-40 秒
+          sleep $((RANDOM % 30 + 10))
 
+      # ============ Space 2 ============
       - name: Wake up Space 2
         id: space2
         run: |
           url="https://sibacohu-duorenyundong.hf.space"
-          name="duorenyundong"
+          name="酒馆（注册版）"  # ← 自定义名称
+          
           http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" \
             "$url")
@@ -58,19 +71,22 @@ jobs:
             echo "result=❌" >> $GITHUB_OUTPUT
           fi
           echo "code=$http_code" >> $GITHUB_OUTPUT
+          echo "name=$name" >> $GITHUB_OUTPUT
           
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d parse_mode="HTML" \
             -d text="🔄 <b>$name</b>%0A状态码: $http_code"
           
-          sleep 30
+          sleep $((RANDOM % 30 + 10))
 
+      # ============ Space 3 ============
       - name: Wake up Space 3
         id: space3
         run: |
-          url="https://anikaednerarter50-granite-docling-258m-demo.hf.space"
-          name="granite-docling-258m"
+          url="https://link.066677.xyz"
+          name="Linkwarden"  # ← 自定义名称
+          
           http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0" \
             "$url")
@@ -81,6 +97,7 @@ jobs:
             echo "result=❌" >> $GITHUB_OUTPUT
           fi
           echo "code=$http_code" >> $GITHUB_OUTPUT
+          echo "name=$name" >> $GITHUB_OUTPUT
           
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
@@ -96,8 +113,26 @@ jobs:
           c1="${{ steps.space1.outputs.code }}"
           c2="${{ steps.space2.outputs.code }}"
           c3="${{ steps.space3.outputs.code }}"
+          n1="${{ steps.space1.outputs.name }}"
+          n2="${{ steps.space2.outputs.name }}"
+          n3="${{ steps.space3.outputs.name }}"
+          
+          # 统计成功数量
+          success=0
+          total=3
+          [ "$r1" = "✅" ] && ((success++))
+          [ "$r2" = "✅" ] && ((success++))
+          [ "$r3" = "✅" ] && ((success++))
+          
+          if [ "$success" -eq "$total" ]; then
+            summary="🎉 全部成功"
+          elif [ "$success" -eq 0 ]; then
+            summary="💥 全部失败"
+          else
+            summary="⚠️ 部分成功 ($success/$total)"
+          fi
           
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d parse_mode="HTML" \
-            -d text="📊 <b>保活任务完成</b>%0A%0A$r1 canary-1b-v2-dev ($c1)%0A$r2 duorenyundong ($c2)%0A$r3 granite-docling-258m ($c3)%0A%0A⏰ $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
+            -d text="📊 <b>保活任务完成</b>%0A%0A$r1 $n1 ($c1)%0A$r2 $n2 ($c2)%0A$r3 $n3 ($c3)%0A%0A$summary%0A⏰ $(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')"
